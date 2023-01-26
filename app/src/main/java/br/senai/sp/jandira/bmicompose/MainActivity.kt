@@ -117,7 +117,8 @@ fun Greeting(name: String) {
                 )
 
                 Button(
-                    onClick = { nameState.value = "" },
+                    onClick = { nameState.value = ""
+                              valueOfTextField.value = "" },
                     colors = ButtonDefaults.buttonColors(Color.DarkGray)
                 ) {
                     Row (
