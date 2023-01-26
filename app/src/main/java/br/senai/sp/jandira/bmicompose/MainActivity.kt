@@ -118,9 +118,17 @@ fun Greeting(name: String) {
 
                 Button(
                     onClick = { nameState.value = "" },
+                    colors = ButtonDefaults.buttonColors(Color.DarkGray)
                 ) {
-                    Icon(imageVector = Icons.Rounded.Delete, contentDescription = "clear")
-                    Text(text = "Limpar")
+                    Row (
+                        Modifier.fillMaxWidth().height(40.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ){
+                        Icon(imageVector = Icons.Rounded.Delete, contentDescription = "clear", modifier = Modifier.padding(end = 10.dp))
+                        Text(text = "Limpar")
+                    }
+
                 }
             }
         }
