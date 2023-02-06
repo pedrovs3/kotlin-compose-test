@@ -1,23 +1,33 @@
 package br.senai.sp.jandira.bmicompose
 
-import android.graphics.drawable.Icon
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandIn
+import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.slideIn
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -25,10 +35,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.senai.sp.jandira.bmicompose.ui.theme.BMIComposeTheme
-import java.text.Normalizer.Form
+import br.senai.sp.jandira.bmicompose.utils.bmiCalculate
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,9 +72,27 @@ fun Global() {
         mutableStateOf("")
     }
 
+    var expandState by remember {
+        mutableStateOf(false)
+    }
+
+    var bmiValue by remember {
+        mutableStateOf(0.0)
+    }
+
+    var weightError by remember {
+        mutableStateOf(false)
+    }
+    var heightError by remember {
+        mutableStateOf(false)
+    }
+
+    val weightFocusRequester = FocusRequester()
+    val context = LocalContext.current
+
     Column( // Content
         Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.SpaceBetween
+        verticalArrangement = Arrangement.Center
     ) {
         // Header
         Column(
@@ -92,17 +122,31 @@ fun Global() {
                 .padding(start = 20.dp, end = 20.dp),
             horizontalAlignment = Alignment.Start
         ) {
+            OutlinedTextField(
+                value = weightState,
+                onValueChange = {
+                    weightError = false
+                    weightState = if (it.isEmpty()) {
+                        it.trim('.')
+                    } else {
+                        var lastCharacter = it[it.lastIndex]
+                        Log.i("xxx", lastCharacter.toString())
 
-//            TextFieldMain(idLabel = R.string.weight_label)
-//
-//            Spacer(modifier = Modifier.height(16.dp))
+                        var newValue = if (lastCharacter === '.' || lastCharacter === ',')
+                            it.dropLast(1) else it
 
-//            TextFieldMain(idLabel = R.string.height_label, state)
-            Text(text = stringResource(id = R.string.weight_label))
-            OutlinedTextField(value = weightState, onValueChange = { weightState = it},
+                        newValue
+                    }
+                },
                 Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 5.dp, top = 3.dp),
+                    .padding(bottom = 5.dp, top = 3.dp)
+                    .focusRequester(weightFocusRequester),
+                trailingIcon = { if(weightError) Icon(imageVector = Icons.Rounded.Info, contentDescription = "teste", tint = Color.Red) else null},
+                isError = weightError,
+                label = {
+                    Text(text = stringResource(id = R.string.weight_label))
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp)
@@ -110,20 +154,51 @@ fun Global() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-//            Text(text = stringResource(id = R.string.height_label))
-            OutlinedTextField(value = heightState, onValueChange = { heightState = it},
+            OutlinedTextField(
+                value = heightState,
+                onValueChange = {
+                    heightError = false
+                    heightState = if (it.isEmpty()) {
+                        it.trim('.')
+                    } else {
+                        var lastCharacter = it[it.lastIndex]
+                        Log.i("xxx", lastCharacter.toString())
+
+                        var newValue = if (lastCharacter === '.' || lastCharacter === ',')
+                            it.dropLast(1) else it
+                        newValue
+                    }
+                },
                 Modifier
                     .fillMaxWidth()
                     .padding(bottom = 5.dp, top = 3.dp),
+                trailingIcon = {  if(heightError) Icon(imageVector = Icons.Rounded.Info, contentDescription = "teste", tint = Color.Red) else null},
+                isError = heightError,
                 label = {
-                        Text(text = stringResource(id = R.string.height_label))
+                    Text(text = stringResource(id = R.string.height_label))
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp)
             )
 
-            Button(onClick = { /*TODO*/ },
+            Button(
+                onClick = {
+                    if (weightState.isEmpty()) {
+                        weightError = true
+                        Toast.makeText(context, "O campo [Weight] nao pode estar vazio!", Toast.LENGTH_SHORT).show()
+                    }
+                    if(heightState.isEmpty()) {
+                        heightError = true
+                        Toast.makeText(context, "O campo [Height] nao pode estar vazio!", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    else {
+                        bmiValue =
+                            bmiCalculate(weightState.trim().toInt(), heightState.trim().toDouble())
+                        expandState = true
+                    }
+                },
                 Modifier
                     .fillMaxWidth()
                     .padding(top = 32.dp)
@@ -140,64 +215,78 @@ fun Global() {
             Spacer(modifier = Modifier.height(32.dp))
         }
         //Footer
-        Column() {
+        AnimatedVisibility(
+            visible = expandState,
+            enter = expandIn() + slideIn(initialOffset = { IntOffset(it.width / 2, 0) }),
+            exit = shrinkOut(
+                tween(300, easing = FastOutSlowInEasing),
+                shrinkTowards = Alignment.BottomStart,
+            ) { fullSize ->
+                IntSize(fullSize.width / 50, fullSize.height / 50)
+            }
+        ) {
             Card(
                 Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(0.7f),
+                    .fillMaxHeight(),
                 shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
                 backgroundColor = MaterialTheme.colors.primary
             ) {
                 Column(
                     Modifier
                         .padding(16.dp)
-                        .fillMaxSize()
-                    ,
+                        .fillMaxSize(),
                     verticalArrangement = Arrangement.SpaceBetween,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                 Text(
-                     text = stringResource(id = R.string.score_label),
-                     fontSize = 20.sp,
-                     fontWeight = FontWeight.Bold,
-                     textAlign = TextAlign.Center
-                 )
-                Text(
-                    text = "0.00",
-                    fontSize = 48.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    text = "Congratulations! Your weight is ideal",
-                    Modifier.fillMaxWidth(),
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Button(
-                        onClick = { /*TODO*/ },
-                        colors = ButtonDefaults.buttonColors(Color(137, 119, 248)
+                    Text(
+                        text = stringResource(id = R.string.score_label),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
                     )
+                    Text(
+                        text = "${String.format("%.2f", bmiValue)}",
+                        fontSize = 48.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "Congratulations! Your weight is ideal",
+                        Modifier.fillMaxWidth(),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        Icon(imageVector = Icons.Rounded.Refresh, contentDescription = "")
+                        Button(
+                            onClick = {
+                                expandState = false
+                                weightState = ""
+                                heightState = ""
+                                weightFocusRequester.requestFocus()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                Color(137, 119, 248)
+                            )
+                        ) {
+                            Icon(imageVector = Icons.Rounded.Refresh, contentDescription = "")
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(text = "Reset")
+                        }
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text(text = "Reset")
+                        Button(
+                            onClick = { /*TODO*/ },
+                            colors = ButtonDefaults.buttonColors(Color(137, 119, 248))
+                        ) {
+                            Icon(imageVector = Icons.Rounded.Share, contentDescription = "")
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(text = "Share")
+                        }
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Button(
-                        onClick = { /*TODO*/ },
-                        colors = ButtonDefaults.buttonColors(Color(137, 119, 248))
-                    ) {
-                        Icon(imageVector = Icons.Rounded.Share, contentDescription = "")
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(text = "Share")
-                    }
-                }
                 }
             }
         }
