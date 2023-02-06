@@ -142,7 +142,13 @@ fun Global() {
                     .fillMaxWidth()
                     .padding(bottom = 5.dp, top = 3.dp)
                     .focusRequester(weightFocusRequester),
-                trailingIcon = { if(weightError) Icon(imageVector = Icons.Rounded.Info, contentDescription = "teste", tint = Color.Red) else null},
+                trailingIcon = {
+                    if (weightError) Icon(
+                        imageVector = Icons.Rounded.Info,
+                        contentDescription = "teste",
+                        tint = Color.Red
+                    ) else null
+                },
                 isError = weightError,
                 label = {
                     Text(text = stringResource(id = R.string.weight_label))
@@ -172,7 +178,13 @@ fun Global() {
                 Modifier
                     .fillMaxWidth()
                     .padding(bottom = 5.dp, top = 3.dp),
-                trailingIcon = {  if(heightError) Icon(imageVector = Icons.Rounded.Info, contentDescription = "teste", tint = Color.Red) else null},
+                trailingIcon = {
+                    if (heightError) Icon(
+                        imageVector = Icons.Rounded.Info,
+                        contentDescription = "teste",
+                        tint = Color.Red
+                    ) else null
+                },
                 isError = heightError,
                 label = {
                     Text(text = stringResource(id = R.string.height_label))
@@ -186,17 +198,28 @@ fun Global() {
                 onClick = {
                     if (weightState.isEmpty()) {
                         weightError = true
-                        Toast.makeText(context, "O campo [Weight] nao pode estar vazio!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "O campo [Weight] nao pode estar vazio!",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
-                    if(heightState.isEmpty()) {
+                    if (heightState.isEmpty()) {
                         heightError = true
-                        Toast.makeText(context, "O campo [Height] nao pode estar vazio!", Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-                    else {
-                        bmiValue =
-                            bmiCalculate(weightState.trim().toInt(), heightState.trim().toDouble())
-                        expandState = true
+                        Toast.makeText(
+                            context,
+                            "O campo [Height] nao pode estar vazio!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        if (!weightError && !heightError) {
+                            bmiValue =
+                                bmiCalculate(
+                                    weightState.trim().toInt(),
+                                    heightState.trim().toDouble()
+                                )
+                            expandState = true
+                        }
                     }
                 },
                 Modifier
