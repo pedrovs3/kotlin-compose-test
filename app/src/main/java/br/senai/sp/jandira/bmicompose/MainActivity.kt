@@ -1,7 +1,6 @@
 package br.senai.sp.jandira.bmicompose
 
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -41,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.senai.sp.jandira.bmicompose.ui.theme.BMIComposeTheme
 import br.senai.sp.jandira.bmicompose.utils.bmiCalculate
+import br.senai.sp.jandira.bmicompose.utils.colorBMI
+import br.senai.sp.jandira.bmicompose.utils.textBmiLabel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,6 +88,15 @@ fun Global() {
         mutableStateOf(false)
     }
 
+    var colorSate by remember {
+        mutableStateOf(0)
+    }
+
+    if(bmiValue <= 18.5) colorSate = 0
+    if(bmiValue > 18.5 && bmiValue < 25.0) colorSate = 1
+    if(bmiValue >= 25.0 && bmiValue < 30.0) colorSate = 2
+    if(bmiValue > 30.0) colorSate = 3
+
     val weightFocusRequester = FocusRequester()
     val context = LocalContext.current
 
@@ -125,12 +135,13 @@ fun Global() {
             OutlinedTextField(
                 value = weightState,
                 onValueChange = {
-                    weightError = false
-                    weightState = if (it.isEmpty()) {
-                        it.trim('.')
+
+                    weightState = if (it.trim().isEmpty()) {
+                        weightError = true
+                        it.trim()
                     } else {
                         var lastCharacter = it[it.lastIndex]
-                        Log.i("xxx", lastCharacter.toString())
+                        weightError = false
 
                         var newValue = if (lastCharacter === '.' || lastCharacter === ',')
                             it.dropLast(1) else it
@@ -140,7 +151,7 @@ fun Global() {
                 },
                 Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 5.dp, top = 3.dp)
+                    .padding(top = 3.dp)
                     .focusRequester(weightFocusRequester),
                 trailingIcon = {
                     if (weightError) Icon(
@@ -157,18 +168,21 @@ fun Global() {
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp)
             )
+            if(weightError) {
+                Text(text = stringResource(id = R.string.weight_error), Modifier.fillMaxWidth(), color = Color.Red, textAlign = TextAlign.End, fontSize = 14.sp)
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = heightState,
                 onValueChange = {
-                    heightError = false
-                    heightState = if (it.isEmpty()) {
-                        it.trim('.')
+                    heightState = if (it.trim().isEmpty()) {
+                        heightError = true
+                        it.trim()
                     } else {
                         var lastCharacter = it[it.lastIndex]
-                        Log.i("xxx", lastCharacter.toString())
+                        heightError = false
 
                         var newValue = if (lastCharacter === '.' || lastCharacter === ',')
                             it.dropLast(1) else it
@@ -177,7 +191,7 @@ fun Global() {
                 },
                 Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 5.dp, top = 3.dp),
+                    .padding(top = 3.dp),
                 trailingIcon = {
                     if (heightError) Icon(
                         imageVector = Icons.Rounded.Info,
@@ -193,6 +207,10 @@ fun Global() {
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp)
             )
+
+            if(heightError) {
+                    Text(text = stringResource(id = R.string.height_error), Modifier.fillMaxWidth(), color = Color.Red, textAlign = TextAlign.End, fontSize = 14.sp)
+            }
 
             Button(
                 onClick = {
@@ -253,7 +271,7 @@ fun Global() {
                     .fillMaxWidth()
                     .fillMaxHeight(),
                 shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-                backgroundColor = MaterialTheme.colors.primary
+                backgroundColor = colorBMI(colorSate)
             ) {
                 Column(
                     Modifier
@@ -266,7 +284,7 @@ fun Global() {
                         text = stringResource(id = R.string.score_label),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                     Text(
                         text = "${String.format("%.2f", bmiValue)}",
@@ -275,7 +293,7 @@ fun Global() {
                         textAlign = TextAlign.Center
                     )
                     Text(
-                        text = "Congratulations! Your weight is ideal",
+                        text = stringResource(id = textBmiLabel(bmiValue)),
                         Modifier.fillMaxWidth(),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
@@ -315,7 +333,6 @@ fun Global() {
         }
     }
 }
-
 
 //@Composable
 //fun TextFieldMain(idLabel : Int, state : String) {

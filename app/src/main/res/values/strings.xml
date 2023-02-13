@@ -5,4 +5,11 @@
     <string name="height_label">Your height in cm</string>
     <string name="button_calculate">Calculate</string>
     <string name="score_label">Your Score</string>
+    <string name="weight_error">Weight is required!</string>
+    <string name="height_error">Height is required!</string>
+    <string name="underweight">Underweight</string>
+    <string name="normal">Normal height!</string>
+    <string name="overweight">Overweight</string>
+    <string name="obese">Obese</string>
+    <string name="extremely_obese">Extremely Obese</string>
 </resources>
